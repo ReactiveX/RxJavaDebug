@@ -10,7 +10,7 @@ A debug plugin implementation for [RxJava](https://github.com/ReactiveX/RxJava).
 
 - Google Group: [RxJava](http://groups.google.com/d/forum/rxjava)
 - Twitter: [@RxJava](http://twitter.com/RxJava)
-- [GitHub Issues](https://github.com/ReactiveX/RxJava/issues)
+- [GitHub Issues](https://github.com/ReactiveX/RxJavaDebug/issues)
 
 
 ## Binaries
