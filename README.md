@@ -1,6 +1,6 @@
 # RxJava Debug Plugin
 
-A debug plugin implementation for [RxJava](https://github.com/ReactiveX/RxJava).
+A execution plugin implementation for debugging [RxJava](https://github.com/ReactiveX/RxJava). RxJava gives you low level plugin hooks for things like create, subscribe and lift. The DebugHook defined in this project uses those to give you hooks for the start/end/error of `Subscribe`, `OnNext`, `OnError`, `OnComplete` and `Unsubscribe`. For many of the `rx.plugins.DebugNotification` events you also get the operator where the notification is coming from and going to. It's like having a detailed materialized copy of every `rx.Observable` in the system.
 
 ## Master Build Status
 
