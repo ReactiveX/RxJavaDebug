@@ -12,8 +12,9 @@
  */
 package rx.debug;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -22,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import rx.Observable;
-import rx.Observer;
+import rx.Subscriber;
 import rx.functions.Func1;
 import rx.observers.Subscribers;
 import rx.plugins.DebugHook;
@@ -31,10 +32,13 @@ import rx.plugins.PlugReset;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.SimpleContext;
 import rx.plugins.SimpleDebugNotificationListener;
+import rx.plugins.SimpleDebugNotificationListener.NotificationsByObservable;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Queue;
+import java.util.SortedSet;
 
 public class DebugHookTest {
     @Before
@@ -75,32 +79,39 @@ public class DebugHookTest {
     }
 
     public void assertValidState(SimpleDebugNotificationListener listener) {
-        for (Entry<Observer<?>, List<SimpleContext<?>>> notificationsForObserver : listener.getNotificationsByObservable().entrySet()) {
-            List<SimpleContext<?>> notifications = notificationsForObserver.getValue();
+        SortedSet<NotificationsByObservable<?>> snapshot = listener.getNotificationsByObservable();
+        System.out.println(listener.toString(snapshot));
+        for (NotificationsByObservable<?> notificationsForObserver : snapshot) {
+            SortedSet<?> notificationsSet = notificationsForObserver.getNotifications();
+            Iterator<SimpleContext<?>> notifications = (Iterator<SimpleContext<?>>) notificationsSet.iterator();
 
-            System.out.println(notificationsForObserver.getKey() + "\n" + notifications);
-
-            int i = 0;
-            SimpleContext<?> first = notifications.get(i++);
-            assertTrue("The first notification should be the subscribe or onStart", DebugHookTest.subscribe.matches(first) || DebugHookTest.onStart.matches(first));
+            if (!notifications.hasNext()) {
+                fail("subscriber wasn't used.");
+            }
             long allow = 0;
-            boolean done = false;
-            while (!done) {
-                SimpleContext<?> context = notifications.get(i);
+            SimpleContext<?> context = notifications.next();
+            assertTrue("The first notification should be the subscribe or onStart", DebugHookTest.subscribe.matches(context) || DebugHookTest.onStart.matches(context));
+            while (notifications.hasNext()) {
+                context = notifications.next();
                 if (DebugHookTest.onNext.matches(context)) {
                     assertTrue("request count not greater than zero", allow > 0);
                     allow--;
                 } else if (DebugHookTest.request.matches(context)) {
-                    allow += context.notification.getN();
-                } else if (DebugHookTest.onCompleted.matches(context) || DebugHookTest.onError.matches(context)) {
-                    done = true;
-                } else if (DebugHookTest.unsubscribe.matches(context)) {
+                    allow += context.getNotification().getN();
+                } else if (DebugHookTest.onCompleted.matches(context) || DebugHookTest.onError.matches(context) || DebugHookTest.unsubscribe.matches(context)) {
                     break;
                 }
-                i++;
             }
-            assertTrue("The last notification should be the unsubscribe", DebugHookTest.unsubscribe.matches(notifications.get(i++)));
-            assertEquals(notifications.size(), i);
+            // if the last event was an unsubscribe then there should be not more events.
+            if (DebugHookTest.unsubscribe.matches(context)) {
+                assertFalse(notifications.hasNext());
+            } else {
+                // if it ended in an onComplete or onError there should be one and only one unsbuscribe
+                assertTrue(notifications.hasNext());
+                context = notifications.next();
+                assertTrue("The last notification should be the unsubscribe", DebugHookTest.unsubscribe.matches(context));
+                assertFalse(notifications.hasNext());
+            }
         }
     }
 
@@ -124,7 +135,7 @@ public class DebugHookTest {
             public boolean matches(Object item) {
                 if (item instanceof SimpleContext) {
                     SimpleContext<?> context = (SimpleContext<?>) item;
-                    return context.notification.getKind() == kind;
+                    return context.getNotification().getKind() == kind;
                 }
                 return false;
             }

@@ -15,7 +15,6 @@ package rx.plugins;
 import rx.Observable;
 import rx.Observable.OnSubscribe;
 import rx.Observable.Operator;
-import rx.Observer;
 import rx.Subscriber;
 import rx.observers.SafeSubscriber;
 import rx.operators.DebugSubscriber;
@@ -40,7 +39,7 @@ public class DebugNotification<T> {
     private final T value;
     private final long n;
     @SuppressWarnings("rawtypes")
-    private final Observer observer;
+    private final Subscriber observer;
 
     @SuppressWarnings("unchecked")
     public static <T, C> DebugNotification<T> createSubscribe(Subscriber<? super T> o, Observable<? extends T> source, OnSubscribe<T> sourceFunc) {
@@ -87,7 +86,7 @@ public class DebugNotification<T> {
     }
 
     @SuppressWarnings("rawtypes")
-    private DebugNotification(Observer o, Operator<? extends T, ?> from, Kind kind, T value, Throwable throwable, Operator<?, ? super T> to, Observable<? extends T> source, OnSubscribe<T> sourceFunc,
+    private DebugNotification(Subscriber o, Operator<? extends T, ?> from, Kind kind, T value, Throwable throwable, Operator<?, ? super T> to, Observable<? extends T> source, OnSubscribe<T> sourceFunc,
             long n) {
         this.observer = (o instanceof SafeSubscriber) ? ((SafeSubscriber) o).getActual() : o;
         this.from = from;
@@ -101,7 +100,7 @@ public class DebugNotification<T> {
     }
 
     @SuppressWarnings("rawtypes")
-    public Observer getObserver() {
+    public Subscriber getObserver() {
         return observer;
     }
 

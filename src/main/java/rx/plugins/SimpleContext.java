@@ -12,11 +12,14 @@
  */
 package rx.plugins;
 
-public class SimpleContext<T> {
-    public final DebugNotification<T> notification;
-    public final long start = System.nanoTime();
-    public long end = -1;
-    public Throwable err;
+import java.util.concurrent.atomic.AtomicLong;
+
+public class SimpleContext<T> implements Comparable<SimpleContext<T>> {
+    private final DebugNotification<T> notification;
+    private final long threadId = Thread.currentThread().getId();
+    private final long start = System.nanoTime();
+    private AtomicLong end = new AtomicLong(-1);
+    private volatile Throwable err;
 
     public SimpleContext(DebugNotification<T> notification) {
         this.notification = notification;
@@ -25,16 +28,56 @@ public class SimpleContext<T> {
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        if (end == -1) {
-            str.append("(not complete): ");
-        } else {
-            str.append(end - start).append("ns: ");
-        }
-        str.append(notification);
-        if (err != null) {
-            str.append(" ").append(err.getMessage());
-        }
-        str.append("\n");
+        toString(str);
         return str.toString();
+    }
+
+    private void toString(StringBuilder str) {
+        str.append("{");
+        long e = end.get();
+        if (e != -1) {
+            str.append("\"ns_duration\": ").append(String.format("%10d", e - start)).append(", ");
+        }
+        str.append("\"threadId\": ").append(String.format("%3d", threadId)).append(", ");
+        str.append("\"notification\": ").append(notification).append("}");
+    }
+
+    @Override
+    public int compareTo(SimpleContext<T> o) {
+        return Long.compare(start, o.start);
+    }
+
+    public long getEnd() {
+        return end.get();
+    }
+
+    public void setEnd() {
+        if (!this.end.compareAndSet(-1, System.nanoTime())) {
+            throw new IllegalStateException("The context was already completed");
+        }
+    }
+
+    public Throwable getError() {
+        return err;
+    }
+
+    public void setError(Throwable err) {
+        if (this.end.compareAndSet(-1, System.nanoTime())) {
+            this.err = err;
+        } else {
+            throw new IllegalStateException("The context was already completed");
+        }
+    }
+
+    public DebugNotification<T> getNotification() {
+        return notification;
+    }
+
+    public long getThreadId() {
+        return threadId;
+    }
+
+    public long getStart() {
+        return start;
     }
 }
