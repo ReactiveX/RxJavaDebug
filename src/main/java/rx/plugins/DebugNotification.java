@@ -16,12 +16,19 @@ import rx.Observable;
 import rx.Observable.OnSubscribe;
 import rx.Observable.Operator;
 import rx.Observer;
+import rx.Subscriber;
 import rx.observers.SafeSubscriber;
 import rx.operators.DebugSubscriber;
 
 public class DebugNotification<T> {
     public static enum Kind {
-        OnNext, OnError, OnCompleted, Subscribe, Unsubscribe
+        OnNext,
+        OnError,
+        OnCompleted,
+        Subscribe,
+        OnStart,
+        Unsubscribe,
+        Request
     }
 
     private final Observable<? extends T> source;
@@ -31,11 +38,12 @@ public class DebugNotification<T> {
     private final Operator<?, ? super T> to;
     private final Throwable throwable;
     private final T value;
+    private final long n;
     @SuppressWarnings("rawtypes")
     private final Observer observer;
 
     @SuppressWarnings("unchecked")
-    public static <T, C> DebugNotification<T> createSubscribe(Observer<? super T> o, Observable<? extends T> source, OnSubscribe<T> sourceFunc) {
+    public static <T, C> DebugNotification<T> createSubscribe(Subscriber<? super T> o, Observable<? extends T> source, OnSubscribe<T> sourceFunc) {
         Operator<?, ? super T> to = null;
         Operator<? extends T, ?> from = null;
         if (o instanceof SafeSubscriber) {
@@ -51,27 +59,36 @@ public class DebugNotification<T> {
         if (sourceFunc instanceof DebugHook.DebugOnSubscribe) {
             sourceFunc = ((DebugHook.DebugOnSubscribe) sourceFunc).getActual();
         }
-        return new DebugNotification<T>(o, from, Kind.Subscribe, null, null, to, source, sourceFunc);
+        return new DebugNotification<T>(o, from, Kind.Subscribe, null, null, to, source, sourceFunc, -1);
     }
 
-    public static <T> DebugNotification<T> createOnNext(Observer<? super T> o, Operator<? extends T, ?> from, T t, Operator<?, ? super T> to) {
-        return new DebugNotification<T>(o, from, Kind.OnNext, t, null, to, null, null);
+    public static <T> DebugNotification<T> createStart(Subscriber<? super T> o, Operator<? extends T, ?> from, Operator<?, ? super T> to) {
+        return new DebugNotification<T>(o, from, Kind.OnStart, null, null, to, null, null, -1);
     }
 
-    public static <T> DebugNotification<T> createOnError(Observer<? super T> o, Operator<? extends T, ?> from, Throwable e, Operator<?, ? super T> to) {
-        return new DebugNotification<T>(o, from, Kind.OnError, null, e, to, null, null);
+    public static <T> DebugNotification<T> createOnNext(Subscriber<? super T> o, Operator<? extends T, ?> from, T t, Operator<?, ? super T> to) {
+        return new DebugNotification<T>(o, from, Kind.OnNext, t, null, to, null, null, -1);
     }
 
-    public static <T> DebugNotification<T> createOnCompleted(Observer<? super T> o, Operator<? extends T, ?> from, Operator<?, ? super T> to) {
-        return new DebugNotification<T>(o, from, Kind.OnCompleted, null, null, to, null, null);
+    public static <T> DebugNotification<T> createOnError(Subscriber<? super T> o, Operator<? extends T, ?> from, Throwable e, Operator<?, ? super T> to) {
+        return new DebugNotification<T>(o, from, Kind.OnError, null, e, to, null, null, -1);
     }
 
-    public static <T> DebugNotification<T> createUnsubscribe(Observer<? super T> o, Operator<? extends T, ?> from, Operator<?, ? super T> to) {
-        return new DebugNotification<T>(o, from, Kind.Unsubscribe, null, null, to, null, null);
+    public static <T> DebugNotification<T> createOnCompleted(Subscriber<? super T> o, Operator<? extends T, ?> from, Operator<?, ? super T> to) {
+        return new DebugNotification<T>(o, from, Kind.OnCompleted, null, null, to, null, null, -1);
+    }
+
+    public static <T> DebugNotification<T> createUnsubscribe(Subscriber<? super T> o, Operator<? extends T, ?> from, Operator<?, ? super T> to) {
+        return new DebugNotification<T>(o, from, Kind.Unsubscribe, null, null, to, null, null, -1);
+    }
+
+    public static <T> DebugNotification<T> createRequest(Subscriber<? super T> o, Operator<? extends T, ?> from, Operator<?, ? super T> to, long n) {
+        return new DebugNotification<T>(o, from, Kind.Request, null, null, to, null, null, n);
     }
 
     @SuppressWarnings("rawtypes")
-    private DebugNotification(Observer o, Operator<? extends T, ?> from, Kind kind, T value, Throwable throwable, Operator<?, ? super T> to, Observable<? extends T> source, OnSubscribe<T> sourceFunc) {
+    private DebugNotification(Observer o, Operator<? extends T, ?> from, Kind kind, T value, Throwable throwable, Operator<?, ? super T> to, Observable<? extends T> source, OnSubscribe<T> sourceFunc,
+            long n) {
         this.observer = (o instanceof SafeSubscriber) ? ((SafeSubscriber) o).getActual() : o;
         this.from = from;
         this.kind = kind;
@@ -80,6 +97,7 @@ public class DebugNotification<T> {
         this.to = to;
         this.source = source;
         this.sourceFunc = sourceFunc;
+        this.n = n;
     }
 
     @SuppressWarnings("rawtypes")
@@ -97,6 +115,10 @@ public class DebugNotification<T> {
 
     public Throwable getThrowable() {
         return throwable;
+    }
+
+    public long getN() {
+        return n;
     }
 
     public Operator<?, ? super T> getTo() {
@@ -124,13 +146,14 @@ public class DebugNotification<T> {
         s.append("\"observer\": ");
         if (observer != null)
             s.append("\"").append(observer.getClass().getName()).append("@").append(Integer.toHexString(observer.hashCode())).append("\"");
-        else
-            s.append("null");
+        else s.append("null");
         s.append(", \"type\": \"").append(kind).append("\"");
         if (kind == Kind.OnNext)
-            s.append(", \"value\": ").append(quote(value)).append("");
+            s.append(", \"value\": ").append(quote(value));
         if (kind == Kind.OnError)
             s.append(", \"exception\": \"").append(throwable.getMessage().replace("\\", "\\\\").replace("\"", "\\\"")).append("\"");
+        if (kind == Kind.Request)
+            s.append(", \"n\": ").append(n);
         if (source != null)
             s.append(", \"source\": \"").append(source.getClass().getName()).append("@").append(Integer.toHexString(source.hashCode())).append("\"");
         if (sourceFunc != null)

@@ -6,6 +6,10 @@ buildscript {
 apply plugin: 'rxjava-project'
 apply plugin: 'java'
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
     compile 'io.reactivex:rxjava:1.0.1'
     testCompile 'junit:junit-dep:4.10'

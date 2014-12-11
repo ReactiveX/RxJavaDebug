@@ -54,8 +54,7 @@ public class DebugHook<C> extends RxJavaObservableExecutionHook {
                 try {
                     f.call(o);
                     listener.complete(context);
-                }
-                catch(Throwable e) {
+                } catch (Throwable e) {
                     listener.error(context, e);
                 }
             }
@@ -71,7 +70,7 @@ public class DebugHook<C> extends RxJavaObservableExecutionHook {
     public <T> OnSubscribe<T> onCreate(final OnSubscribe<T> f) {
         return new DebugOnSubscribe<T>(f);
     }
-    
+
     public final class DebugOnSubscribe<T> implements OnSubscribe<T> {
         private final OnSubscribe<T> f;
 
@@ -88,7 +87,6 @@ public class DebugHook<C> extends RxJavaObservableExecutionHook {
             return f;
         }
     }
-
 
     @Override
     public <T, R> Operator<? extends R, ? super T> onLift(final Operator<? extends R, ? super T> bind) {
