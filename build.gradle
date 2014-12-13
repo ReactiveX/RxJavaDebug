@@ -4,6 +4,7 @@ buildscript {
 }
 
 apply plugin: 'rxjava-project'
+apply plugin: 'java'
 
 dependencies {
     compile 'io.reactivex:rxjava:1.0.1'
