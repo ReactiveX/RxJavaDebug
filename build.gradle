@@ -1,9 +1,14 @@
 buildscript {
   repositories { jcenter() }
-  dependencies { classpath 'com.netflix.nebula:gradle-rxjava-project-plugin:1.12.+' }
+  dependencies { classpath 'com.netflix.nebula:gradle-rxjava-project-plugin:2.+' }
 }
 
 apply plugin: 'rxjava-project'
+apply plugin: 'java'
+
+repositories {
+    mavenLocal()
+}
 
 dependencies {
     compile 'io.reactivex:rxjava:1.0.1'
