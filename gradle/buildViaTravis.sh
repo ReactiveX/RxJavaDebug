@@ -2,7 +2,7 @@
 # This script will build the project.
 
 if [ "$TRAVIS_PULL_REQUEST" ]; then
-  echo -e 'Build Pull Request => Branch ['$TRAVIS_BRANCH']'
+  echo -e "Build Pull Request #$TRAVIS_PULL_REQUEST => Branch [$TRAVIS_BRANCH]"
   ./gradlew -Prelease.useLastTag=true build
 elif [ ! "$TRAVIS_PULL_REQUEST" ] && [ "$TRAVIS_TAG" == "" ]; then
   echo -e 'Build Branch with Snapshot => Branch ['$TRAVIS_BRANCH']'
