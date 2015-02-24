@@ -35,7 +35,7 @@ public class SimpleDebugNotificationListener extends DebugNotificationListener<S
         Queue<SimpleContext<?>> notifications = notificationsByObservable.get(n.getObserver());
         if (notifications == null) {
             notifications = new LinkedBlockingQueue<SimpleContext<?>>();
-            notificationsByObservable.put(n.getObserver(), notifications);
+            notificationsByObservable.put((Subscriber<?>) n.getObserver(), notifications);
         }
         notifications.add(context);
         return context;

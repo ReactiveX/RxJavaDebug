@@ -15,6 +15,7 @@ package rx.plugins;
 import rx.Observable;
 import rx.Observable.OnSubscribe;
 import rx.Observable.Operator;
+import rx.Observer;
 import rx.Subscriber;
 import rx.observers.SafeSubscriber;
 import rx.operators.DebugSubscriber;
@@ -99,8 +100,7 @@ public class DebugNotification<T> {
         this.n = n;
     }
 
-    @SuppressWarnings("rawtypes")
-    public Subscriber getObserver() {
+    public Observer<?> getObserver() {
         return observer;
     }
 
