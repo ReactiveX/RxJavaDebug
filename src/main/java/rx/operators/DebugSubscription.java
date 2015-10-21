@@ -13,6 +13,7 @@
 package rx.operators;
 
 import rx.Subscription;
+import rx.exceptions.Exceptions;
 import rx.plugins.DebugNotification;
 import rx.plugins.DebugNotificationListener;
 
@@ -34,6 +35,7 @@ final class DebugSubscription<T, C> implements Subscription {
             listener.complete(context);
         } catch (Throwable e) {
             listener.error(context, e);
+            throw Exceptions.propagate(e);
         }
     }
 
