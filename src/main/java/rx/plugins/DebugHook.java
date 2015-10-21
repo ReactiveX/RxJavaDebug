@@ -17,6 +17,7 @@ import rx.Observable.OnSubscribe;
 import rx.Observable.Operator;
 import rx.Subscriber;
 import rx.Subscription;
+import rx.exceptions.Exceptions;
 import rx.operators.DebugSubscriber;
 
 /**
@@ -56,6 +57,7 @@ public class DebugHook<C> extends RxJavaObservableExecutionHook {
                     listener.complete(context);
                 } catch (Throwable e) {
                     listener.error(context, e);
+                    throw Exceptions.propagate(e);
                 }
             }
         };

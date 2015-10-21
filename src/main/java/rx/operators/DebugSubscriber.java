@@ -13,9 +13,9 @@
 package rx.operators;
 
 import rx.Observable.Operator;
-import rx.Observer;
 import rx.Producer;
 import rx.Subscriber;
+import rx.exceptions.Exceptions;
 import rx.plugins.DebugNotification;
 import rx.plugins.DebugNotificationListener;
 
@@ -43,6 +43,7 @@ public final class DebugSubscriber<T, C> extends Subscriber<T> {
             listener.complete(context);
         } catch (Throwable e) {
             listener.error(context, e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -55,6 +56,7 @@ public final class DebugSubscriber<T, C> extends Subscriber<T> {
             listener.complete(context);
         } catch (Throwable e) {
             listener.error(context, e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -67,6 +69,7 @@ public final class DebugSubscriber<T, C> extends Subscriber<T> {
             listener.complete(context);
         } catch (Throwable e2) {
             listener.error(context, e2);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -81,6 +84,7 @@ public final class DebugSubscriber<T, C> extends Subscriber<T> {
             listener.complete(context);
         } catch (Throwable e) {
             listener.error(context, e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -97,6 +101,7 @@ public final class DebugSubscriber<T, C> extends Subscriber<T> {
                     listener.complete(context);
                 } catch (Throwable e) {
                     listener.error(context, e);
+                    throw Exceptions.propagate(e);
                 }
             }
         });

@@ -23,7 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import rx.Observable;
-import rx.Subscriber;
 import rx.functions.Func1;
 import rx.observers.Subscribers;
 import rx.plugins.DebugHook;
@@ -36,8 +35,6 @@ import rx.plugins.SimpleDebugNotificationListener.NotificationsByObservable;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.SortedSet;
 
 public class DebugHookTest {
