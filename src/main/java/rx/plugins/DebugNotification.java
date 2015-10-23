@@ -150,7 +150,7 @@ public class DebugNotification<T> {
         if (kind == Kind.OnNext)
             s.append(", \"value\": ").append(quote(value));
         if (kind == Kind.OnError)
-            s.append(", \"exception\": \"").append(throwable.getMessage().replace("\\", "\\\\").replace("\"", "\\\"")).append("\"");
+            s.append(", \"exception\": \"").append(throwable.getMessage() == null ? throwable.getClass().getSimpleName() : throwable.getMessage().replace("\\", "\\\\").replace("\"", "\\\"")).append("\"");
         if (kind == Kind.Request)
             s.append(", \"n\": ").append(n);
         if (source != null)
